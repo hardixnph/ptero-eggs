@@ -1,0 +1,105 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY WISP - https:\/\/wisp.gg\/",
+    "meta": {
+        "version": "PTDL_v1"
+    },
+    "exported_at": "2022-03-19T19:18:37+00:00",
+    "name": "Counter-Strike 1.6",
+    "tag": "cs16",
+    "author": "espeon@espeon.dev",
+    "description": "The world's number 1 online action game. Engage in an incredibly realistic brand of terrorist warfare in this wildly popular team-based game. Ally with teammates to complete strategic missions. Take out enemy sites. Rescue hostages. Your role affects your team's success. Your team's success affects your role.",
+    "image": "quay.io\/parkervcp\/pterodactyl-images:ubuntu_source",
+    "startup": ".\/hlds_run -console -game {{HLDS_GAME}} -port {{SERVER_PORT}} -sport {{VAC_PORT}} +map {{SRCDS_MAP}} +ip {{SERVER_IP}} +maxplayers {{MAX_PLAYERS}} +sys_ticrate {{TICKRATE}}, +pingboost {{PINGBOOST}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"Connection to Steam servers successful\",\r\n    \"userInteraction\": []\r\n}",
+        "logs": "{\r\n    \"custom\": true,\r\n    \"location\": \"logs\/latest.log\"\r\n}",
+        "stop": "quit",
+        "custom": "{\n    \"appid\": 90,\n    \"root\": \"cstrike\",\n    \"fastdl\": {\n        \"algorithm\": \"none\",\n        \"folders\": {\n            \"maps\": true,\n            \"models\": true,\n            \"overviews\": true,\n            \"resource\": true,\n            \"sound\": true,\n            \"sprites\": true,\n            \"gfx\": true\n        },\n        \"extensions\": {\n            \"png\": true,\n            \"jpg\": true,\n            \"ttf\": true,\n            \"mdl\": true,\n            \"phy\": true,\n            \"vvd\": true,\n            \"vtx\": true,\n            \"vmt\": true,\n            \"vtf\": true,\n            \"wav\": true,\n            \"mp3\": true,\n            \"ogg\": true,\n            \"bsp\": true,\n            \"nav\": true,\n            \"pcf\": true,\n            \"ain\": true\n        }\n    }\n}"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# SRCDS Base Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\napt -y update\r\napt -y --no-install-recommends install curl lib32gcc1 ca-certificates\r\n\r\ncd \/tmp\r\ncurl -sSL -o steamcmd.tar.gz http:\/\/media.steampowered.com\/installer\/steamcmd_linux.tar.gz\r\n\r\nmkdir -p \/mnt\/server\/steamcmd\r\ntar -xzvf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\r\ncd \/mnt\/server\/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root \/mnt\r\n\r\nexport HOME=\/mnt\/server\r\n.\/steamcmd.sh +login anonymous +force_install_dir \/mnt\/server +app_update ${SRCDS_APPID} +app_set_config 90 mod ${HLDS_GAME} +quit\r\n\r\nmkdir -p \/mnt\/server\/.steam\/sdk32\r\ncp -v linux32\/steamclient.so ..\/.steam\/sdk32\/steamclient.so",
+            "container": "ubuntu:18.04",
+            "entrypoint": "bash"
+        },
+        "update": {
+            "script": null,
+            "container": "alpine:3.4",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Game ID",
+            "description": "The ID corresponding to the game to download and run using HLDS.\r\n\r\nThe HLDS server ID is 90. This should not be changed.",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "90",
+            "tickable": false,
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|digits_between:1,6"
+        },
+        {
+            "name": "Game Name",
+            "description": "The name corresponding to the game to download and run using HLDS.\r\n\r\nall the HLDS server names are here - https:\/\/developer.valvesoftware.com\/wiki\/Dedicated_Server_Name_Enumeration",
+            "env_variable": "HLDS_GAME",
+            "default_value": "cstrike",
+            "tickable": false,
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|alpha_dash|between:1,100"
+        },
+        {
+            "name": "Map",
+            "description": "The default map for the server.",
+            "env_variable": "SRCDS_MAP",
+            "default_value": "de_dust2",
+            "tickable": false,
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|alpha_dash"
+        },
+        {
+            "name": "VAC port",
+            "description": "Specifies the VAC port the server should use. Default is 26900.",
+            "env_variable": "VAC_PORT",
+            "default_value": "26900",
+            "tickable": false,
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|digits_between:1,5"
+        },
+        {
+            "name": "Max Players",
+            "description": "Maximum amount of players that can connect to the server. Once this number of players is reached, the server is considered full and cannot accept any more players until a slot is freed.",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "32",
+            "tickable": false,
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:32"
+        },
+        {
+            "name": "Tickrate",
+            "description": "The tick rate, sometimes known as the update rate, is defined as the number of ticks per second. Currently, default CS 1.6 servers run at 100 tick.",
+            "env_variable": "TICKRATE",
+            "default_value": "100",
+            "tickable": false,
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|numeric|max:1000"
+        },
+        {
+            "name": "Pingboost",
+            "description": "All the pingboost modes attempt to reduce the latency caused by the server. The default implementation adds around 20msec to each players ping (under linux). Modes are from 1 to 3, 3 minimises the latency to the minimum possible (this cause a lot of CPU usage).",
+            "env_variable": "PINGBOOST",
+            "default_value": "1",
+            "tickable": false,
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|max:3"
+        }
+    ],
+    "mods": []
+}
